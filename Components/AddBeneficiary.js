@@ -84,24 +84,34 @@ const AddBeneficiary = ({ navigation }) => {
   }, []);
 
   const submitHandler = async () => {
-    if (confirmAc === beneficiaryData.accountNumber) {
+    if (confirmAc !== beneficiaryData.accountNumber)
+      showToast("Account numbers don't match.")
+    else if (beneficiaryData.ifscCode.length !== 11)
+      showToast("IFSC Code invalid.")
+    else if (beneficiaryData.recipientName.length < 3)
+      showToast("Recipient name shorter than expected.")
+    else if (beneficiaryData.recipientName.match(/[^a-zA-Z]/g))
+      showToast("Recipient name contains invalid characters.");
+    else if (beneficiaryData.nickname.match(/[^a-zA-Z]/g))
+      showToast("Nickname contains invalid characters.");
+    else if (beneficiaryData.nickname.length === 0)
+      showToast("Nickname is required.")
+    else
       try {
+        let res;
         if (route.params.edit) {
-          const res = await updateBeneficiary({ AccountType: route.params.user.accountType, ...beneficiaryData }); showToast(res.message); if (res.status) {
-            navigation.navigate("Beneficiary", { reloadList: true })
-          }
+          res = await updateBeneficiary({ AccountType: route.params.user.accountType, ...beneficiaryData });
         }
         else {
-          const res = await addBeneficiary({ AccountType: route.params.sameBank ? "same" : "other", ...beneficiaryData }); showToast(res.message); if (res.status) {
-            navigation.navigate("Beneficiary", { reloadList: true })
-          }
+          res = await addBeneficiary({ AccountType: route.params.sameBank ? "same" : "other", ...beneficiaryData });
+        }
+        showToast(res.message);
+        if (res.status) {
+          navigation.navigate("Beneficiary", { reloadList: true })
         }
       } catch (error) {
         console.log(error, "at Components/AddBeneficiary.js")
       }
-    }
-    else
-      showToast("Account numbers don't match.")
   }
 
   const [beneficiaryData, beneficiaryData_] = useState({
@@ -179,6 +189,7 @@ const AddBeneficiary = ({ navigation }) => {
           value={confirmAc}
           onChangeText={confirmAc_}
           style={styles.input}
+          maxLength={16}
           placeholder="Re-enter Account Number"
         />
         <TextInput

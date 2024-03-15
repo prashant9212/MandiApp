@@ -98,8 +98,10 @@ const Beneficiary = ({ navigation }) => {
   }
   const route = useRoute();
   const [loading, setLoading] = useState(false);
+  React.useEffect(() => { getData(true) }, [])
   useFocusEffect(React.useCallback(() => {
-    if (route.params?.reloadList) { console.log("Automated running"); setBeneficiaries([]); getData(true).then() }
+    console.log("Focusing.")
+    if (route.params?.reloadList) { console.log("Automated running"); setBeneficiaries([]); getData(false).then() }
   }, []))
 
 
@@ -311,14 +313,10 @@ const Beneficiary = ({ navigation }) => {
               </View>
             })
             }
+            {beneficiaries.length === 0 && <Text>Loading...</Text>}
           </ScrollView>
-          {/* List End */}
-
         </View>
       </View>
-
-
-      {/* Start List */}
     </View>
   );
 };
