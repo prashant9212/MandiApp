@@ -12,6 +12,7 @@ import {
   Alert,
   Platform,
   PanResponder,
+  ScrollView,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Dropdown } from "react-native-element-dropdown";
@@ -23,7 +24,13 @@ import {
   showToast,
 } from "../Api/common";
 import { useFocusEffect } from "@react-navigation/native";
+import { getBeneficiaries } from "../Api/beneficiaryApi";
 
+const TransfarData = [
+  { label: "Prashant", value: "1" },
+  { label: "Gyan", value: "2" },
+  { label: "Chauhan", value: "3" },
+];
 const data = [
   { label: "NEFT", value: "1" },
   { label: "RTGS", value: "2" },
@@ -31,19 +38,31 @@ const data = [
 ];
 
 const AmtTransfer = ({ navigation }) => {
+  const [TransAccount, setTransAccount] = useState(null);
   const [value, setValue] = useState(null);
   const [transferAmt, setTransferAmt] = useState(0);
   const [balance, set_balance] = useState(-1);
   const [name, setName] = useState("");
+  const [account, setAccount] = useState("");
+  const [beneficiaries, setBeneficiaries] = useState([])
   React.useEffect(() => {
     startTimer();
     const fetchBalance = async () => {
       try {
         const y = await AsyncStorage.getItem("userDetails");
+        const res = await getBeneficiaries();
+        if (res.status) {
+          let sortedBeneficiaries = res.payload.sort((a, b) => Number(b.intBid) - Number(a.intBid));
+          sortedBeneficiaries.forEach(document => {
+            document.recipientName = `${document.recipientName} - ${document.accountNumber}`;
+          });
+          setBeneficiaries(sortedBeneficiaries);
+        }
         const x = JSON.parse(y);
         if (x) {
           set_balance(x.savingAccount);
           setName(x.fullName);
+          setAccount(x.accountNumber);
         } else set_balance("Loading");
       } catch (error) {
         console.log(error);
@@ -156,138 +175,172 @@ const AmtTransfer = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={{ fontSize: 18 }}>Amount Transfer</Text>
       </View>
-      <View style={styles.MainCard}>
-        <View style={{ flexDirection: "row", width: "100%" }}>
-          <Text
-            style={{
-              width: "60%",
-              fontSize: 18,
-              color: "#5a5a5a",
-              fontWeight: "500",
-            }}
-          >
-            {name}
-          </Text>
-          <View style={{ width: "40%", flexDirection: "row-reverse" }}>
-            <TouchableOpacity
-              onPress={() => {
-                handleActivity();
-                navigation.navigate("Home");
+      <ScrollView>
+        <View style={styles.MainCard}>
+          <View style={{ flexDirection: "row", width: "100%" }}>
+            <Text
+              style={{
+                width: "60%",
+                fontSize: 18,
+                color: "#5a5a5a",
+                fontWeight: "500",
               }}
             >
-              <Text
-                style={{ fontSize: 14, fontWeight: "500", color: "#FF1715" }}
+              {name}
+            </Text>
+            <View style={{ width: "40%", flexDirection: "row-reverse" }}>
+              <TouchableOpacity
+                onPress={() => {
+                  handleActivity();
+                  navigation.navigate("Home");
+                }}
               >
-                Cancel
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={{ fontSize: 14, fontWeight: "500", color: "#FF1715" }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        <View style={{ flexDirection: "row", width: "100%", marginTop: 15 }}>
-          <Text style={{ fontSize: 14, color: "#5a5a5a" }}>Account :</Text>
-          <Text style={{ marginLeft: 8, fontSize: 14, color: "#5a5a5a" }}>
-            897526221562
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.StatementCard}>
-        <Text
-          style={{
-            width: "100%",
-            fontSize: 18,
-            color: "#5a5a5a",
-            fontWeight: "500",
-            marginBottom: 4,
-          }}
-        >
-          Amount
-        </Text>
-        <View>
-          <TextInput
-            ref={inputTextRef}
-            style={styles.InputAmt}
-            value={transferAmt.toString()}
-            onChangeText={setTransferAmt}
-            placeholder="Enter Amount"
-            keyboardType="numeric"
-          />
-          <Text style={styles.AmountText}>{formatIndian(balance)} INR</Text>
-          <Text style={styles.AmountText1}>Your reference (optional)</Text>
-          <Text style={styles.AmountText1}>
-            Your reference will appere on your statements.
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.StatementCard1}>
-        <Text
-          style={{
-            width: "100%",
-            fontSize: 18,
-            color: "#5a5a5a",
-            fontWeight: "500",
-            marginBottom: 4,
-          }}
-        >
-          Transfer type
-        </Text>
-        <View>
-          <Dropdown
-            style={styles.dropdown}
-            data={data}
-            maxHeight={300}
-            iconStyle={styles.iconStyle}
-            labelField="label"
-            valueField="value"
-            placeholder="NEFT"
-            value={value}
-            onChange={(item) => {
-              handleActivity();
-              setValue(item.value);
-            }}
-          />
-          <View style={styles.AmountText2}>
-            <Image
-              style={{ width: 14, height: 14, margin: 2 }}
-              source={require("../assets/link.png")}
-            ></Image>
-            <Text style={{ marginLeft: 5 }}> View Terms & Conditions</Text>
-          </View>
-          <View style={styles.AmountText3}>
-            <Image
-              style={{ width: 16, height: 16, margin: 2 }}
-              source={require("../assets/check1.png")}
-            ></Image>
-            <Text style={{ marginLeft: 5 }}>
-              I have read and agree to the Terms & Conditions
+          <View style={{ flexDirection: "row", width: "100%", marginTop: 15 }}>
+            <Text style={{ fontSize: 14, color: "#5a5a5a" }}>Account :</Text>
+            <Text style={{ marginLeft: 8, fontSize: 14, color: "#5a5a5a" }}>
+              {account}
             </Text>
           </View>
         </View>
-      </View>
-      <TouchableOpacity
-        onPress={this.showAlert}
-      >
-        <Text style={{
-          width: 200,
-          height: 45,
-          backgroundColor: "#FF1715",
-          padding: 5,
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-          textAlignVertical: "center",
-          alignSelf: "center",
-          borderRadius: 10,
-          marginTop: 25,
-          color: "#fff",
-          fontSize: 18
-        }}
+
+        <View style={styles.StatementCard}>
+          <Text
+            style={{
+              width: "100%",
+              fontSize: 18,
+              color: "#5a5a5a",
+              fontWeight: "500",
+              marginBottom: 4,
+            }}
+          >
+            Enter Amount
+          </Text>
+          <View>
+            <TextInput
+              ref={inputTextRef}
+              style={styles.InputAmt}
+              value={transferAmt.toString()}
+              onChangeText={setTransferAmt}
+              placeholder="Enter Amount"
+              keyboardType="numeric"
+            />
+            <Text style={styles.AmountText}>Account Balance: {formatIndian(balance)} INR</Text>
+            {/* <Text style={styles.AmountText1}>Your reference (optional)</Text>
+          <Text style={styles.AmountText1}>
+            Your reference will appere on your statements.
+          </Text> */}
+          </View>
+        </View>
+        <View style={styles.StatementCard5}>
+          <Text
+            style={{
+              width: "100%",
+              fontSize: 18,
+              color: "#5a5a5a",
+              fontWeight: "500",
+              marginBottom: 0,
+            }}
+          >
+            Transfar to
+          </Text>
+          <View>
+            <Dropdown
+              style={styles.dropdown}
+              data={beneficiaries}
+              maxHeight={300}
+              iconStyle={styles.iconStyle}
+              labelField="recipientName"
+              valueField="intBid"
+              placeholder="Select Account"
+              value={TransAccount}
+              onChange={(item) => {
+                handleActivity();
+                setTransAccount(item.intBid);
+              }}
+            />
+
+          </View>
+        </View>
+
+        <View style={styles.StatementCard1}>
+          <Text
+            style={{
+              width: "100%",
+              fontSize: 18,
+              color: "#5a5a5a",
+              fontWeight: "500",
+              marginBottom: 4,
+            }}
+          >
+            Transfer type
+          </Text>
+          <View>
+            <Dropdown
+              style={styles.dropdown1}
+              data={data}
+              maxHeight={300}
+              iconStyle={styles.iconStyle}
+              labelField="label"
+              valueField="value"
+              placeholder="NEFT"
+              value={value}
+              onChange={(item) => {
+                handleActivity();
+                setValue(item.value);
+              }}
+            />
+            <View style={styles.AmountText2}>
+              <Image
+                style={{ width: 14, height: 14, margin: 2 }}
+                source={require("../assets/link.png")}
+              ></Image>
+              <Text style={{ marginLeft: 5 }}> View Terms & Conditions</Text>
+            </View>
+            <View style={styles.AmountText3}>
+              <Image
+                style={{ width: 16, height: 16, margin: 2 }}
+                source={require("../assets/check1.png")}
+              ></Image>
+              <Text style={{ marginLeft: 5 }}>
+                I have read and agree to the Terms & Conditions
+              </Text>
+            </View>
+          </View>
+        </View>
+
+
+        <TouchableOpacity
+          onPress={this.showAlert}
         >
-          Transfer
-        </Text>
-      </TouchableOpacity>
+          <Text style={{
+            width: 200,
+            height: 45,
+            backgroundColor: "#FF1715",
+            padding: 5,
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            textAlignVertical: "center",
+            alignSelf: "center",
+            borderRadius: 10,
+            marginTop: 25,
+            color: "#fff",
+            fontSize: 18
+          }}
+          >
+            Transfer
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };
@@ -315,6 +368,15 @@ const styles = StyleSheet.create({
     borderColor: "#E9E9E9",
     borderWidth: 1,
   },
+  StatementCard5: {
+    backgroundColor: "#fff",
+    padding: 18,
+    margin: 6,
+    marginTop: 0,
+    borderRadius: 5,
+    borderColor: "#E9E9E9",
+    borderWidth: 1,
+  },
   StatementCard1: {
     backgroundColor: "#fff",
     padding: 18,
@@ -327,7 +389,7 @@ const styles = StyleSheet.create({
   AmountText: {
     color: "#5A5A5A",
     fontSize: 13,
-    marginBottom: 30,
+    marginBottom: 0,
   },
   AmountText1: {
     color: "#5A5A5A",
@@ -337,7 +399,7 @@ const styles = StyleSheet.create({
   AmountText2: {
     color: "#5A5A5A",
     fontSize: 15,
-    padding: 8,
+    padding: 0,
     textAlignVertical: "center",
     alignSelf: "center",
     flexDirection: "row",
@@ -347,7 +409,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     padding: 8,
     marginTop: 10,
-    marginBottom: 10,
+    marginBottom: 0,
     textAlignVertical: "center",
     alignSelf: "center",
     flexDirection: "row",
@@ -371,12 +433,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 7,
   },
-  dropdown: {
+  dropdown1: {
     height: 50,
-    borderBottomColor: "gray",
+    borderBottomColor: "#ccc",
     borderBottomWidth: 0.5,
     width: "100%",
     marginBottom: 20,
+  },
+  dropdown: {
+    height: 50,
+    borderBottomColor: "#ccc",
+    borderBottomWidth: 0.5,
+    width: "100%",
   },
   icon: {
     marginRight: 5,

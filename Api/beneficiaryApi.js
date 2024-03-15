@@ -45,7 +45,7 @@ export const updateBeneficiary = async (body) => {
 export const getBeneficiaries = async () => {
     try {
         const userId = await getLoginId();
-        const response = await axios.get(API_URL + "/getBeneficiaryDetails/2");
+        const response = await axios.get(API_URL + "/getBeneficiaryDetails/" + userId);
         if (response && response.data && response.data.success) {
             return {
                 status: true,
