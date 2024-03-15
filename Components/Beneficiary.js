@@ -96,12 +96,10 @@ const Beneficiary = ({ navigation }) => {
         setLoading(false)
     }
   }
-  const route = useRoute();
   const [loading, setLoading] = useState(false);
   React.useEffect(() => { getData(true) }, [])
   useFocusEffect(React.useCallback(() => {
-    console.log("Focusing.")
-    if (route.params?.reloadList) { console.log("Automated running"); setBeneficiaries([]); getData(false).then() }
+    getData(false).then()
   }, []))
 
 
